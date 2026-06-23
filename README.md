@@ -30,17 +30,18 @@ html<!DOCTYPE html>
   }
 
   #panel {
-    position: absolute;
+    position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background: rgba(0,0,0,0.65);
-    padding: 14px 16px 24px;
+    background: rgba(0,0,0,0.75);
+    padding: 14px 16px 40px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     backdrop-filter: blur(6px);
-  }
+    z-index: 9999;
+}
 
   .row {
     display: flex;
