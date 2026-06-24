@@ -1,4 +1,4 @@
-html<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -22,11 +22,12 @@ html<!DOCTYPE html>
   }
 
   #overlay {
-    position: absolute;
+    position: fixed;
     top: 0; left: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
+    z-index: 10;
   }
 
   #panel {
@@ -41,7 +42,7 @@ html<!DOCTYPE html>
     gap: 10px;
     backdrop-filter: blur(6px);
     z-index: 9999;
-}
+  }
 
   .row {
     display: flex;
@@ -72,12 +73,6 @@ html<!DOCTYPE html>
     width: 100%;
   }
 
-  #hint {
-    color: rgba(255,255,255,0.5);
-    font-size: 12px;
-    text-align: center;
-  }
-
   #fileInput { display: none; }
 </style>
 </head>
@@ -98,7 +93,14 @@ html<!DOCTYPE html>
       <label>Размер</label>
       <input type="range" id="scale" min="10" max="300" value="80">
     </div>
-    <div id="hint">Перемещай изображение пальцем</div>
+    <div class="row">
+      <label>Позиция X</label>
+      <input type="range" id="posX" min="0" max="100" value="50">
+    </div>
+    <div class="row">
+      <label>Позиция Y</label>
+      <input type="range" id="posY" min="0" max="100" value="50">
+    </div>
   </div>
 </div>
 
@@ -108,13 +110,12 @@ html<!DOCTYPE html>
   const ctx = canvas.getContext('2d');
   const opacitySlider = document.getElementById('opacity');
   const scaleSlider = document.getElementById('scale');
+  const posXSlider = document.getElementById('posX');
+  const posYSlider = document.getElementById('posY');
   const uploadBtn = document.getElementById('uploadBtn');
   const fileInput = document.getElementById('fileInput');
 
   let img = null;
-  let imgX = 0, imgY = 0;
-  let dragging = false;
-  let dragStartX, dragStartY, imgStartX, imgStartY;
 
   // Камера
   async function startCamera() {
@@ -128,11 +129,9 @@ html<!DOCTYPE html>
     }
   }
 
-  // Размер canvas
   function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    if (!img) { imgX = canvas.width / 2; imgY = canvas.height / 2; }
   }
 
   window.addEventListener('resize', resize);
@@ -147,54 +146,11 @@ html<!DOCTYPE html>
     const reader = new FileReader();
     reader.onload = ev => {
       const image = new Image();
-      image.onload = () => {
-        img = image;
-        imgX = canvas.width / 2;
-        imgY = (canvas.height - 200) / 2; // чуть выше панели
-      };
+      image.onload = () => { img = image; };
       image.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   });
-
-// Drag (touch)
-canvas.addEventListener('touchstart', e => {
-    if (!img) return;
-    e.preventDefault();
-    dragging = true;
-    dragStartX = e.touches[0].clientX;
-    dragStartY = e.touches[0].clientY;
-    imgStartX = imgX;
-    imgStartY = imgY;
-}, { passive: false });
-
-canvas.addEventListener('touchmove', e => {
-    if (!dragging) return;
-    e.preventDefault();
-    imgX = imgStartX + (e.touches[0].clientX - dragStartX);
-    imgY = imgStartY + (e.touches[0].clientY - dragStartY);
-}, { passive: false });
-
-canvas.addEventListener('touchend', e => {
-    e.preventDefault();
-    dragging = false;
-}, { passive: false });
-
-// Drag (mouse для теста на ПК)
-canvas.addEventListener('mousedown', e => {
-    if (!img) return;
-    dragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    imgStartX = imgX;
-    imgStartY = imgY;
-});
-canvas.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    imgX = imgStartX + (e.clientX - dragStartX);
-    imgY = imgStartY + (e.clientY - dragStartY);
-});
-canvas.addEventListener('mouseup', () => dragging = false);
 
   // Рендер
   function draw() {
@@ -206,8 +162,12 @@ canvas.addEventListener('mouseup', () => dragging = false);
       const w = img.naturalWidth * scale;
       const h = img.naturalHeight * scale;
 
+      // Позиция из ползунков (0-100% экрана)
+      const x = (posXSlider.value / 100) * canvas.width;
+      const y = (posYSlider.value / 100) * canvas.height;
+
       ctx.globalAlpha = opacity;
-      ctx.drawImage(img, imgX - w / 2, imgY - h / 2, w, h);
+      ctx.drawImage(img, x - w / 2, y - h / 2, w, h);
       ctx.globalAlpha = 1;
     }
 
