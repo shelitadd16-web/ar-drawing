@@ -157,40 +157,44 @@ html<!DOCTYPE html>
     reader.readAsDataURL(file);
   });
 
-  // Drag (touch)
-  canvas.addEventListener('touchstart', e => {
+// Drag (touch)
+canvas.addEventListener('touchstart', e => {
     if (!img) return;
+    e.preventDefault();
     dragging = true;
     dragStartX = e.touches[0].clientX;
     dragStartY = e.touches[0].clientY;
     imgStartX = imgX;
     imgStartY = imgY;
-  });
+}, { passive: false });
 
-  canvas.addEventListener('touchmove', e => {
+canvas.addEventListener('touchmove', e => {
     if (!dragging) return;
     e.preventDefault();
     imgX = imgStartX + (e.touches[0].clientX - dragStartX);
     imgY = imgStartY + (e.touches[0].clientY - dragStartY);
-  }, { passive: false });
+}, { passive: false });
 
-  canvas.addEventListener('touchend', () => dragging = false);
+canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    dragging = false;
+}, { passive: false });
 
-  // Drag (mouse для теста на ПК)
-  canvas.addEventListener('mousedown', e => {
+// Drag (mouse для теста на ПК)
+canvas.addEventListener('mousedown', e => {
     if (!img) return;
     dragging = true;
     dragStartX = e.clientX;
     dragStartY = e.clientY;
     imgStartX = imgX;
     imgStartY = imgY;
-  });
-  canvas.addEventListener('mousemove', e => {
+});
+canvas.addEventListener('mousemove', e => {
     if (!dragging) return;
     imgX = imgStartX + (e.clientX - dragStartX);
     imgY = imgStartY + (e.clientY - dragStartY);
-  });
-  canvas.addEventListener('mouseup', () => dragging = false);
+});
+canvas.addEventListener('mouseup', () => dragging = false);
 
   // Рендер
   function draw() {
